@@ -1,0 +1,38 @@
+@startuml
+ actor Developer
+ cloud "Some cloud"{
+  node "#1" {
+    [TrustHub UI]
+    [TrustHub Code Files]
+  }
+  database "DynamoDB" {
+    frame "TrustHub DataModel" {
+      [Tables]
+    }
+  }
+  node "API's" {
+    [APIs]
+  }
+  node "Users" {
+    [Users]
+  }
+  node "Warehouse" {
+    [Lambdas]
+  }
+    node "Docs" {
+    [Lambdas]
+  }
+}
+ Developer -> [TrustHub UI]
+[TrustHub UI] -> Developer
+[TrustHub UI] -> Users
+Users --> [TrustHub UI]
+[TrustHub UI] --> [API's]
+[API's] --> [TrustHub UI]
+[API's] -> [Lambdas]
+[Lambdas] -> [API's]
+[Lambdas] --> [TrustHub Code Files]
+[TrustHub Code Files] --> [Lambdas]
+[Lambdas] --> [Tables]
+[Tables] --> [Lambdas]
+@enduml
