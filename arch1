@@ -13,7 +13,7 @@
   node "API's" {
     [APIs]
   }
-  node "Users" {
+  node "User" {
     [Users]
   }
   node "Warehouse" {
