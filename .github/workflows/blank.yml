@@ -1,0 +1,54 @@
+name: Create Release Branch By Schedule
+
+env:
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  
+on: 
+  schedule:
+    - cron: '00 23 * * *'
+jobs:
+  runcronjob:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get current date
+        id: date
+        uses: Kaven-Universe/github-action-current-date-time@v1
+        with:
+          format: "YYYY-MM-DD"
+      - name: Test time
+        run: |
+          echo "${{ steps.date.outputs.time }}"
+      - id: create-new-branch
+        name: checkout code
+        uses: actions/checkout@v3
+        with:
+          branch_name: new-branch-${{ steps.date.outputs.time }}
+      - name: Read data from Google Sheets
+        uses: tk-hori/google-spreadsheet-reader-action@v2.2.0
+        id: read_sheet
+        with:
+          spreadsheetId: "1jejILD-f275jMR6LXcItbXKcciiIy2duUsIxZ0Keij4"
+          sheetName: 'Schedule'
+          range: 'A2:B'
+      - name: Test data read
+        run: echo "${{ steps.read_sheet.outputs.values }}"
+      - name: Filter data for current service
+        id: filter_service
+        run: |
+          SERVICE=$1
+          SCHEDULE=$(echo "${{ steps.read_sheet.outputs.values }}" | grep "$SERVICE" | awk '{print $2}')
+          echo "::set-output name=schedule::$SCHEDULE"
+        shell: bash
+        env:
+          SERVICE: ${{ github.repository }}
+      - id: create-release-branch
+        name: create release branch
+        if: contains(steps.filter_service.outputs.schedule, steps.date.outputs.time)
+        uses: morihiro-sanu/create-release-branch@main
+        with:
+          branch_name: ${{ github.head_ref || github.ref_name }}
+          token: ${{ secrets.AJAX_BOT_TOKEN }}
+          string_version_files: gradle.properties:applicationVersion
+          telegram_token: ${{ secrets.TELEGRAM_TOKEN }}
+          telegram_to: ${{ secrets.TELEGRAM_TO }}
